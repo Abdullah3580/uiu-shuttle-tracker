@@ -268,6 +268,9 @@ function listenForAllBuses() {
         const busesData = snapshot.val() || {};
         const TEN_MINUTES_AGO = Date.now() - (10 * 60 * 1000);
         const busGroups = [];
+        // ✅ Route-based grouping: একই from→to route এর সবাই একটাই group পাবে
+        // groupId = "from__to" — সম্পূর্ণ stable, কোনো user আসলে বা গেলেও পরিবর্তন হয় না
+        const routeGroupMap = {};
 
         Object.keys(busesData).forEach(sessionId => {
             const bus = busesData[sessionId];
@@ -281,41 +284,35 @@ function listenForAllBuses() {
             }
             
             bus.id = sessionId;
-            let addedToGroup = false;
 
-            // 🔒 Nearest Group Fix: সবচেয়ে কাছের গ্রুপে join করবে, প্রথম matching-এ নয়
-            let nearestGroup = null;
-            let nearestDistance = Infinity;
-            for (let group of busGroups) {
-                if (group.from === bus.from && group.to === bus.to) {
-                    let distance = getDistanceInMeters(group.lat, group.lng, bus.lat, bus.lng);
-                    if (distance <= 50 && distance < nearestDistance) {
-                        nearestDistance = distance;
-                        nearestGroup = group;
-                    }
-                }
-            }
-            if (nearestGroup) {
-                nearestGroup.users.push(bus);
-                nearestGroup.lat = (nearestGroup.lat + bus.lat) / 2;
-                nearestGroup.lng = (nearestGroup.lng + bus.lng) / 2;
-                if (bus.speed > nearestGroup.maxSpeed) nearestGroup.maxSpeed = bus.speed;
-                if (bus.timestamp > nearestGroup.latestTimestamp) nearestGroup.latestTimestamp = bus.timestamp;
-                addedToGroup = true;
-            }
+            // Stable group ID: route দিয়ে নির্ধারিত — user ID দিয়ে নয়
+            const groupId = `${bus.from}__${bus.to}`;
 
-            if (!addedToGroup) {
-                busGroups.push({
-                    from: bus.from, to: bus.to, lat: bus.lat, lng: bus.lng,
-                    maxSpeed: bus.speed || 0, latestTimestamp: bus.timestamp, users: [bus]
-                });
+            if (routeGroupMap[groupId]) {
+                const group = routeGroupMap[groupId];
+                group.users.push(bus);
+                // ✅ Correct weighted centroid (n জনের সঠিক গাণিতিক গড়)
+                const n = group.users.length;
+                group.lat = group.lat + (bus.lat - group.lat) / n;
+                group.lng = group.lng + (bus.lng - group.lng) / n;
+                if ((bus.speed || 0) > group.maxSpeed) group.maxSpeed = bus.speed;
+                if (bus.timestamp > group.latestTimestamp) group.latestTimestamp = bus.timestamp;
+            } else {
+                routeGroupMap[groupId] = {
+                    groupId,
+                    from: bus.from, to: bus.to,
+                    lat: bus.lat, lng: bus.lng,
+                    maxSpeed: bus.speed || 0,
+                    latestTimestamp: bus.timestamp,
+                    users: [bus]
+                };
+                busGroups.push(routeGroupMap[groupId]);
             }
         });
 
         const activeGroupIds = {};
         busGroups.forEach(group => {
-            // 🔒 Flicker Fix: sorted IDs দিয়ে stable groupId তৈরি করা হয়েছে
-            const groupId = group.users.map(u => u.id).sort().join('_');
+            const groupId = group.groupId; // ✅ stable route-based ID
             activeGroupIds[groupId] = true;
             
             const position = [group.lat, group.lng];
