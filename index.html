@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UIU Shuttle Tracker</title>
+    
+    <!-- Leaflet & Routing CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="style.css" />
+    
+    <!-- Leaflet & Routing JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+</head>
+<body>
+    
+    <div id="map"></div>
+    <div id="notification" class="notification"></div>
+    <div class="logo">UIU Shuttle Tracker</div>
+
+    <div class="controls">
+        <label for="fromSelect">From:</label>
+        <select id="fromSelect"></select>
+        <label for="toSelect">To:</label>
+        <select id="toSelect"></select>
+        <button id="startBtn" class="btn">Share</button>
+        <button id="stopBtn" class="btn hidden">Stop</button>
+    </div>
+
+    <!-- Floating Action Buttons -->
+    <div id="profileBtn" class="circle-btn">
+        <img src="https://i.postimg.cc/k47jC52z/shuttle-bus-icon-isolated-on-white-background-vector.jpg" alt="Profile">
+    </div>
+    <div id="recenterBtn" class="circle-btn hidden">📍</div>
+    <div id="scheduleBtn" class="circle-btn">📅</div>
+    <div id="darkModeBtn" class="circle-btn">🌙</div>
+
+    <!-- Info/Contact & Feedback Modal -->
+    <div id="infoModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span id="closeModal" class="close-btn">&times;</span>
+            <img src="https://i.postimg.cc/0QvN9Gtt/df4c385e-1b7b-48d9-bb1d-6b4c07234acb.jpg" alt="Profile" class="modal-profile-pic">
+            <h2 class="modal-title">Md.Abdullah All Siyam</h2>
+            <div class="social-links">
+                <a href="https://www.facebook.com/Siam358" target="_blank">Facebook</a> |
+                <a href="https://wa.me/8801317190020" target="_blank">WhatsApp</a> |
+                <a href="mailto:mdabdullahalsiam358@gmail.com">Email</a>
+            </div>
+            <hr>
+            <div class="feedback-section">
+                <p>Have a suggestion or found a bug? Let me know!</p>
+                <textarea id="feedbackText" placeholder="Write your message..."></textarea>
+                <button id="sendFeedbackBtn" class="btn">Send</button>
+            </div>
+            <hr>
+            <div class="admin-section">
+                <p><strong>Admin Panel</strong></p>
+                <div id="loginForm">
+                    <input type="email" id="adminEmail" placeholder="Email">
+                    <input type="password" id="adminPassword" placeholder="Password">
+                    <button id="adminLoginBtn" class="btn">Login</button>
+                </div>
+                <div id="logoutSection" class="hidden">
+                    <button id="viewMessagesBtn" class="btn">View Messages</button>
+                    <button id="logoutBtn" class="btn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Message View Modal -->
+    <div id="adminModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <span id="closeAdminModal" class="close-btn">&times;</span>
+            <h2 class="modal-title">Received Messages</h2>
+            <div id="messageList" class="message-list"></div>
+        </div>
+    </div>
+
+    <!-- Shuttle Schedule Modal -->
+    <div id="scheduleModal" class="modal-overlay hidden">
+        <div class="modal-content" style="max-width: 450px;">
+            <span id="closeScheduleModal" class="close-btn">&times;</span>
+            <h2 class="modal-title">🚌 UIU Shuttle Schedule</h2>
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>From</th>
+                        <th>To</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><b>07:15 AM</b></td><td>Dhanmondi / Mirpur / Uttara</td><td>UIU Campus</td></tr>
+                    <tr><td><b>08:30 AM</b></td><td>Khilgaon / Sayedabad</td><td>UIU Campus</td></tr>
+                    <tr><td><b>01:00 PM</b></td><td>UIU Campus</td><td>Dhanmondi / Mirpur</td></tr>
+                    <tr><td><b>02:15 PM</b></td><td>UIU Campus</td><td>All Routes</td></tr>
+                    <tr><td><b>04:40 PM</b></td><td>UIU Campus</td><td>All Routes</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Custom Logic Script -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
