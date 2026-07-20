@@ -4,30 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIU Shuttle Tracker</title>
-
-    <!-- Leaflet Map CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-    <!-- Leaflet Routing Machine CSS (ETA and Routes) -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
-
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-    <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css" />
-
-    <!-- Leaflet Map & Routing JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css" integrity="sha512-ApSLB1Pd3/bZN8fWB/RG9YhN/7bd9Hkf3AGaE2mPfebjrxagjuBtx2GcgdqIlJkUzwylBo61r9Xa9NmgBI0swA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-
+    
     <div id="map"></div>
     <div id="notification" class="notification"></div>
     <div class="logo">UIU Shuttle Tracker</div>
 
-    <!-- Main Controls -->
     <div class="controls">
         <label for="fromSelect">From:</label>
         <select id="fromSelect"></select>
@@ -37,20 +24,20 @@
         <button id="stopBtn" class="btn hidden">Stop</button>
     </div>
 
-    <!-- Driver Status Panel (Shown only when location sharing is Active) -->
+    <!-- ✅ Feature 2: Driver Live Message Panel -->
     <div id="driverMsgPanel" class="driver-msg-panel hidden">
-        <span>Quick Status:</span>
-        <button class="msg-btn" onclick="setDriverMsg('Jam on Route 🚗')">Jam 🚗</button>
-        <button class="msg-btn" onclick="setDriverMsg('Bus Full 👥')">Bus Full 👥</button>
-        <button class="msg-btn" onclick="setDriverMsg('At Stand 🚌')">At Stand 🚌</button>
-        <button class="msg-btn" onclick="setDriverMsg('')">Clear ✖️</button>
+        <span class="msg-label">📢 Status:</span>
+        <button class="msg-btn" onclick="setDriverMsg('🚦 Traffic Jam')">🚦 Traffic</button>
+        <button class="msg-btn" onclick="setDriverMsg('⚡ Moving Fast')">⚡ Fast</button>
+        <button class="msg-btn" onclick="setDriverMsg('🛑 Breakdown')">🛑 Breakdown</button>
+        <button class="msg-btn msg-btn-clear" onclick="setDriverMsg(null)">✕ Clear</button>
     </div>
 
     <!-- Floating Action Buttons -->
     <div id="profileBtn" class="circle-btn">
         <img src="./shuttle.jpg" alt="Profile">
     </div>
-    <div id="recenterBtn" class="circle-btn"><i class="fa-solid fa-location-dot"></i></div>
+    <div id="recenterBtn" class="circle-btn hidden"><i class="fa-solid fa-location-dot"></i></div>
     <div id="scheduleBtn" class="circle-btn"><i class="fa-solid fa-calendar-days"></i></div>
     <div id="darkModeBtn" class="circle-btn">🌙</div>
 
@@ -100,30 +87,27 @@
     <div id="scheduleModal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 450px;">
             <span id="closeScheduleModal" class="close-btn">&times;</span>
-            <h2 class="modal-title">UIU Shuttle Schedule</h2>
+            <h2 class="modal-title">🚌 UIU Shuttle Schedule</h2>
             <table class="schedule-table">
                 <thead>
-                    <tr>
-                        <th>From Notun Bazar</th>
-                        <th>From UIU</th>
-                    </tr>
+                    <tr><th>From</th><th>To</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>07.30 AM - 08.45 AM</td><td>10.05 AM</td></tr>
-                    <tr><td>09.25 AM - 09.35 AM</td><td>11.25 AM</td></tr>
-                    <tr><td>10.45 AM - 10.55 AM</td><td>12.45 PM</td></tr>
-                    <tr><td>12.05 PM - 12.15 PM</td><td>02.05 PM</td></tr>
-                    <tr><td>01.25 PM - 01.35 PM</td><td>03.25 PM</td></tr>
-                    <tr><td>02.45 PM - 02.55 PM</td><td>04.40 PM</td></tr>
-                    <tr><td>06.10 PM</td><td>05.45 PM</td></tr>
-                    <tr><td>-</td><td>07.00 PM</td></tr>
-                    <tr><td>-</td><td>09.40 PM</td></tr>
+                    <tr><td><strong>From Notun Bazar</strong></td><td><strong>From UIU</strong></td></tr>
+                    <tr><td>07:30 AM – 08:45 AM</td><td>10:05 AM</td></tr>
+                    <tr><td>09:25 AM – 09:35 AM</td><td>11:25 AM</td></tr>
+                    <tr><td>10:45 AM – 10:55 AM</td><td>12:45 PM</td></tr>
+                    <tr><td>12:05 PM – 12:15 PM</td><td>02:05 PM</td></tr>
+                    <tr><td>01:25 PM – 01:35 PM</td><td>03:25 PM</td></tr>
+                    <tr><td>02:45 PM – 02:55 PM</td><td>04:40 PM</td></tr>
+                    <tr><td>06:10 PM</td><td>05:45 PM</td></tr>
+                    <tr><td>—</td><td>07:00 PM</td></tr>
+                    <tr><td>—</td><td>09:40 PM</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Custom Logic Script -->
-    <script type="module" src="./app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
