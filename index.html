@@ -15,7 +15,17 @@
     <div id="notification" class="notification"></div>
     <div class="logo">UIU Shuttle Tracker</div>
 
-    <div class="controls">
+
+<!-- welcome message -->
+<!-- ১. প্রাথমিক প্রম্পট কার্ড (ওয়েবসাইটে আসলে শুধু এটি দেখাবে) -->
+<div id="sharePrompt" class="controls">
+    <span style="font-size: 14px; font-weight: bold;">আপনি কি লোকেশন শেয়ার করতে চান?</span>
+    <button id="promptYesBtn" class="btn" style="background-color: #28a745;">হ্যাঁ</button>
+    <button id="promptNoBtn" class="btn" style="background-color: #6c757d;">না</button>
+</div>
+
+<!-- location sharearing panel -->
+    <div id="mainControls" class="controls hidden">
         <label for="fromSelect">From:</label>
         <select id="fromSelect"></select>
         <label for="toSelect">To:</label>
@@ -37,7 +47,7 @@
     <div id="profileBtn" class="circle-btn">
         <img src="./shuttle.jpg" alt="Profile">
     </div>
-    <div id="recenterBtn" class="circle-btn hidden"><i class="fa-solid fa-location-dot"></i></div>
+    <div id="recenterBtn" class="circle-btn"><i class="fa-solid fa-location-dot"></i></div>
     <div id="scheduleBtn" class="circle-btn"><i class="fa-solid fa-calendar-days"></i></div>
     <div id="darkModeBtn" class="circle-btn">🌙</div>
 
@@ -48,7 +58,7 @@
             <img src="./profile.jpg" alt="Profile" class="modal-profile-pic">
             <h2 class="modal-title">Md.Abdullah All Siyam</h2>
             <div class="social-links">
-                <a href="https://www.facebook.com/Siam358" target="_blank">Facebook</a> |
+                <a href="https://www.facebook.com/Abdullah35800" target="_blank">Facebook</a> |
                 <a href="https://wa.me/8801317190020" target="_blank">WhatsApp</a> |
                 <a href="mailto:mdabdullahalsiam358@gmail.com">Email</a>
             </div>
@@ -87,7 +97,7 @@
     <div id="scheduleModal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 450px;">
             <span id="closeScheduleModal" class="close-btn">&times;</span>
-            <h2 class="modal-title">🚌 UIU Shuttle Schedule</h2>
+            <h2 class="modal-title">UIU Shuttle Schedule</h2>
             <table class="schedule-table">
                 <thead>
                     <tr><th>From</th><th>To</th></tr>

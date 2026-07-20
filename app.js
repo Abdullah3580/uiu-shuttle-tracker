@@ -597,3 +597,46 @@ if (mySessionId) {
         localStorage.removeItem('sharingRoute');
     }
 }
+// document.addEventListener('DOMContentLoaded', () => {
+//     const locationSharePrompt = document.getElementById('locationSharePrompt');
+//     const trackingControls = document.getElementById('trackingControls');
+//     const btnPromptYes = document.getElementById('btnPromptYes');
+//     const btnPromptNo = document.getElementById('btnPromptNo');
+
+//     // 'হ্যাঁ' বাটনে ক্লিক করলে:
+//     if (btnPromptYes) {
+//         btnPromptYes.addEventListener('click', () => {
+//             // প্রম্পট কার্ডটি লুকিয়ে ফেলা হবে
+//             locationSharePrompt.classList.add('hidden');
+            
+//             // আসল লোকেশন শেয়ারিং প্যানেলটি দৃশ্যমান করা হবে
+//             trackingControls.classList.remove('hidden');
+//         });
+//     }
+
+//     // 'না' বাটনে ক্লিক করলে:
+//     if (btnPromptNo) {
+//         btnPromptNo.addEventListener('click', () => {
+//             // প্রম্পট কার্ডটি হাইড হয়ে যাবে (ইউজার চাইলে ম্যাপ দেখতে পারবে)
+//             locationSharePrompt.classList.add('hidden');
+//         });
+//     }
+// });
+// --- Location Share Prompt Toggle Logic ---
+const sharePrompt = document.getElementById('sharePrompt');
+const controls = document.getElementById('mainControls');
+const promptYesBtn = document.getElementById('promptYesBtn');
+const promptNoBtn = document.getElementById('promptNoBtn');
+
+if (promptYesBtn && promptNoBtn) {
+    // 'হ্যাঁ' বাটনে চাপলে প্রম্পট লুকাবে এবং মূল শেয়ারিং অপশন আসবে
+    promptYesBtn.addEventListener('click', () => {
+        sharePrompt.classList.add('hidden');
+        controls.classList.remove('hidden');
+    });
+
+    // 'না' বাটনে চাপলে প্রম্পট গায়েব হয়ে যাবে
+    promptNoBtn.addEventListener('click', () => {
+        sharePrompt.classList.add('hidden');
+    });
+}
