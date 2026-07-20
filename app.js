@@ -2,17 +2,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebas
 import { getDatabase, ref, set, onValue, remove, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-// --- Corrected Real-World Coordinates for Dhaka / UIU Routes ---
+// --- Corrected Real-World Coordinates for UIU Routes ---
 const locations = {
     "UIU": { lat: 23.7977, lng: 90.4497 },          
     "Natun Bazar": { lat: 23.7974, lng: 90.4230 },   
-    "Kuril": { lat: 23.8196, lng: 90.4234 },         
-    // "Zigatola": { lat: 23.7381, lng: 90.3728 },      
-    // "Technical": { lat: 23.7845, lng: 90.3533 },     
-    // "Signboard": { lat: 23.6823, lng: 90.4820 },     
-    // "Jatrabari": { lat: 23.7106, lng: 90.4343 },     
-    // "Palashi": { lat: 23.7214, lng: 90.3857 },       
-    // "Abdullahpur": { lat: 23.8761, lng: 90.4005 }    
+    "Kuril": { lat: 23.8196, lng: 90.4234 }
 };
 
 // --- DOM Elements ---
@@ -45,7 +39,7 @@ const loginForm = document.getElementById('loginForm');
 const logoutSection = document.getElementById('logoutSection');
 const notification = document.getElementById('notification');
 
-// --- 1. INITIALIZE MAP IMMEDIATELY ---
+// --- Map Initialization ---
 const map = L.map('map').setView([locations.UIU.lat, locations.UIU.lng], 13);
 const busIcon = L.divIcon({ html: '🚌', className: 'emoji-icon', iconSize: [30, 30], iconAnchor: [15, 30] });
 
@@ -100,17 +94,18 @@ function handleFromChange() {
 fromSelect.addEventListener('change', handleFromChange);
 handleFromChange();
 
-// ⚠️ 2. Firebase Config (Replace with your actual keys)
+// --- Firebase Config ---
 const firebaseConfig = {
-  apiKey: "AIzaSyBPuc06Txuyz8BKwmQmSVpKqiByfrMok8c",
-  authDomain: "uiu-shuttle-tracker-43216.firebaseapp.com",
-  databaseURL: "https://uiu-shuttle-tracker-43216-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "uiu-shuttle-tracker-43216",
-  storageBucket: "uiu-shuttle-tracker-43216.firebasestorage.app",
-  messagingSenderId: "679422838083",
-  appId: "1:679422838083:web:fb7790de62030c7855dbf6",
-  measurementId: "G-4C26CSN4YV"
+    apiKey: "AIzaSyBPuc06Txuyz8BKwmQmSVpKqiByfrMok8c",
+    authDomain: "uiu-shuttle-tracker-43216.firebaseapp.com",
+    databaseURL: "https://uiu-shuttle-tracker-43216-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "uiu-shuttle-tracker-43216",
+    storageBucket: "uiu-shuttle-tracker-43216.firebasestorage.app",
+    messagingSenderId: "679422838083",
+    appId: "1:679422838083:web:fb7790de62030c7855dbf6",
+    measurementId: "G-4C26CSN4YV"
 };
+
 let app, db, auth;
 try {
     app = initializeApp(firebaseConfig);
@@ -120,12 +115,59 @@ try {
     console.error("Firebase Initialization Failed!", e);
 }
 
+// Global Variables
 let mySessionId = localStorage.getItem('uiuBusSessionId');
 let watchId = null;
 let currentUserPosition = null;
 let isFirstLocationUpdate = true;
+let currentDriverMsg = null;
 const busMarkers = {};
 const routingControls = {}; 
+const busPolylines = {}; 
+const busPathHistory = {}; 
+const routeCoordinates = {}; // Stores routing points for Snap-to-Route
+let wakeLock = null;
+
+// --- 🎯 SNAP-TO-ROUTE MATHEMATICAL ALGORITHM ---
+function getNearestPointOnSegment(p, a, b) {
+    const x = p.lng, y = p.lat;
+    const x1 = a.lng, y1 = a.lat;
+    const x2 = b.lng, y2 = b.lat;
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    if (dx === 0 && dy === 0) return { lat: a.lat, lng: a.lng };
+
+    let t = ((x - x1) * dx + (y - y1) * dy) / (dx * dx + dy * dy);
+    t = Math.max(0, Math.min(1, t)); // Clamp projection inside segment
+
+    return {
+        lat: y1 + t * dy,
+        lng: x1 + t * dx
+    };
+}
+
+function snapToRoute(lat, lng, routeCoords) {
+    if (!routeCoords || routeCoords.length === 0) return [lat, lng];
+
+    let minDistance = Infinity;
+    let snappedPoint = [lat, lng];
+
+    for (let i = 0; i < routeCoords.length - 1; i++) {
+        const a = routeCoords[i];
+        const b = routeCoords[i + 1];
+        const projected = getNearestPointOnSegment({ lat, lng }, a, b);
+
+        const distSq = Math.pow(lat - projected.lat, 2) + Math.pow(lng - projected.lng, 2);
+
+        if (distSq < minDistance) {
+            minDistance = distSq;
+            snappedPoint = [projected.lat, projected.lng];
+        }
+    }
+    return snappedPoint;
+}
 
 function updateUI(isSharing) {
     startBtn.classList.toggle('hidden', isSharing);
@@ -133,6 +175,32 @@ function updateUI(isSharing) {
     fromSelect.disabled = isSharing;
     toSelect.disabled = isSharing || fromSelect.value !== 'UIU';
     recenterBtn.classList.toggle('hidden', !isSharing);
+    
+    const panel = document.getElementById('driverMsgPanel');
+    if (panel) panel.classList.toggle('hidden', !isSharing);
+    if (!isSharing) { currentDriverMsg = null; clearMsgBtnHighlight(); }
+}
+
+window.setDriverMsg = function(msg) {
+    currentDriverMsg = msg;
+    clearMsgBtnHighlight();
+    if (msg) {
+        document.querySelectorAll('.msg-btn').forEach(btn => {
+            if (btn.textContent.trim() === msg || btn.getAttribute('onclick')?.includes(msg)) {
+                btn.classList.add('active');
+            }
+        });
+    }
+    if (db && mySessionId) {
+        const myBusRef = ref(db, 'buses/' + mySessionId);
+        import("https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js")
+            .then(({ update }) => update(myBusRef, { msg: msg || null }));
+    }
+    showNotification(msg ? `Status: ${msg}` : 'Status cleared', 'success');
+};
+
+function clearMsgBtnHighlight() {
+    document.querySelectorAll('.msg-btn').forEach(btn => btn.classList.remove('active'));
 }
 
 function showNotification(message, type = 'success') {
@@ -143,32 +211,19 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-function getDistanceInMeters(lat1, lon1, lat2, lon2) {
-    const R = 6371000; 
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c; 
-}
-
 window.reportFakeBus = function(sessionIdsJson) {
     if(!db) return;
     const sessionIds = JSON.parse(decodeURIComponent(sessionIdsJson));
     if(!confirm("Are you sure this bus location is fake?")) return;
 
-    // 🔒 Spam Fix: একই ইউজার একাধিকবার রিপোর্ট করতে পারবে না
     const alreadyReportedKey = 'reportedBuses';
     let reportedBuses = {};
     try { reportedBuses = JSON.parse(localStorage.getItem(alreadyReportedKey)) || {}; } catch(e) {}
 
     let anyNewReport = false;
     sessionIds.forEach(id => {
-        if (reportedBuses[id]) return; // আগেই রিপোর্ট করা হয়েছে
+        if (reportedBuses[id]) return;
 
-        // Firebase-এ reportedBy/{mySessionId} = true সেট করে তারপর count বাড়াও
         const reportedByRef = ref(db, `buses/${id}/reportedBy/${mySessionId || 'anonymous'}`);
         import("https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js").then(({ get, set: fbSet }) => {
             get(reportedByRef).then(snap => {
@@ -225,7 +280,8 @@ function startSharing() {
         }
         set(myBusRef, { 
             lat: latitude, lng: longitude, timestamp: Date.now(),
-            from: fromLocation, to: toLocation, speed: currentSpeed, reports: 0
+            from: fromLocation, to: toLocation, speed: currentSpeed, reports: 0,
+            msg: currentDriverMsg || null
         });
     }, (error) => { 
         if(error.code === 1) { 
@@ -234,6 +290,12 @@ function startSharing() {
         } 
     }, { enableHighAccuracy: true });
     
+    if ('wakeLock' in navigator) {
+        navigator.wakeLock.request('screen')
+            .then(lock => { wakeLock = lock; })
+            .catch(() => {});
+    }
+
     updateUI(true);
     showNotification("Location sharing started!", "success");
 }
@@ -249,6 +311,7 @@ function stopSharing(clearSession = true) {
     }
     watchId = null;
     currentUserPosition = null;
+    if (wakeLock) { wakeLock.release(); wakeLock = null; }
     updateUI(false);
     showNotification("Location sharing stopped.", "error");
 }
@@ -268,8 +331,6 @@ function listenForAllBuses() {
         const busesData = snapshot.val() || {};
         const TEN_MINUTES_AGO = Date.now() - (10 * 60 * 1000);
         const busGroups = [];
-        // ✅ Route-based grouping: একই from→to route এর সবাই একটাই group পাবে
-        // groupId = "from__to" — সম্পূর্ণ stable, কোনো user আসলে বা গেলেও পরিবর্তন হয় না
         const routeGroupMap = {};
 
         Object.keys(busesData).forEach(sessionId => {
@@ -284,19 +345,19 @@ function listenForAllBuses() {
             }
             
             bus.id = sessionId;
-
-            // Stable group ID: route দিয়ে নির্ধারিত — user ID দিয়ে নয়
             const groupId = `${bus.from}__${bus.to}`;
 
             if (routeGroupMap[groupId]) {
                 const group = routeGroupMap[groupId];
                 group.users.push(bus);
-                // ✅ Correct weighted centroid (n জনের সঠিক গাণিতিক গড়)
                 const n = group.users.length;
                 group.lat = group.lat + (bus.lat - group.lat) / n;
                 group.lng = group.lng + (bus.lng - group.lng) / n;
                 if ((bus.speed || 0) > group.maxSpeed) group.maxSpeed = bus.speed;
-                if (bus.timestamp > group.latestTimestamp) group.latestTimestamp = bus.timestamp;
+                if (bus.timestamp > group.latestTimestamp) {
+                    group.latestTimestamp = bus.timestamp;
+                    group.latestMsg = bus.msg || null;
+                }
             } else {
                 routeGroupMap[groupId] = {
                     groupId,
@@ -304,6 +365,7 @@ function listenForAllBuses() {
                     lat: bus.lat, lng: bus.lng,
                     maxSpeed: bus.speed || 0,
                     latestTimestamp: bus.timestamp,
+                    latestMsg: bus.msg || null,
                     users: [bus]
                 };
                 busGroups.push(routeGroupMap[groupId]);
@@ -312,19 +374,32 @@ function listenForAllBuses() {
 
         const activeGroupIds = {};
         busGroups.forEach(group => {
-            const groupId = group.groupId; // ✅ stable route-based ID
+            const groupId = group.groupId;
             activeGroupIds[groupId] = true;
             
-            const position = [group.lat, group.lng];
+            // Calculate Route & ETA first
+            updateEtaAndRoute([group.lat, group.lng], groupId, group.to);
+
+            // 📍 SNAP TO ROUTE: Map raw position to the nearest road polyline point
+            const rawPos = [group.lat, group.lng];
+            const position = routeCoordinates[groupId] 
+                ? snapToRoute(rawPos[0], rawPos[1], routeCoordinates[groupId]) 
+                : rawPos;
+
             const speedDisplay = group.maxSpeed > 0 ? `${group.maxSpeed} km/h` : '0 km/h';
             const trackerCount = group.users.length;
             const groupSessionIds = encodeURIComponent(JSON.stringify(group.users.map(u => u.id)));
+
+            const msgHtml = group.latestMsg
+                ? `<div style="margin:6px 0;padding:5px 8px;background:#fff3cd;border-left:3px solid #ffc107;border-radius:4px;font-size:12px;">📢 ${group.latestMsg}</div>`
+                : '';
 
             const popupContent = `
                 <b>Route:</b> ${group.from} → ${group.to}<br>
                 <b>Speed:</b> ${speedDisplay}<br>
                 <b>Trackers:</b> ${trackerCount} Student(s) 👥<br>
                 <b>Updated:</b> ${formatTimeAgo(group.latestTimestamp)}
+                ${msgHtml}
                 <button class="report-btn" onclick="reportFakeBus('${groupSessionIds}')">Report Fake 🚫</button>
             `;
 
@@ -335,9 +410,28 @@ function listenForAllBuses() {
                 busMarkers[groupId] = L.marker(position, { icon: busIcon }).addTo(map).bindPopup(popupContent);
             }
             busMarkers[groupId].toFront();
-            updateEtaAndRoute(position, groupId, group.to);
+
+            // Path history trail
+            if (!busPathHistory[groupId]) busPathHistory[groupId] = [];
+            const lastPt = busPathHistory[groupId][busPathHistory[groupId].length - 1];
+            const moved = !lastPt || lastPt[0] !== position[0] || lastPt[1] !== position[1];
+            if (moved) {
+                busPathHistory[groupId].push(position);
+                if (busPathHistory[groupId].length > 50) busPathHistory[groupId].shift();
+            }
+            if (busPathHistory[groupId].length > 1) {
+                if (busPolylines[groupId]) {
+                    busPolylines[groupId].setLatLngs(busPathHistory[groupId]);
+                } else {
+                    busPolylines[groupId] = L.polyline(busPathHistory[groupId], {
+                        color: '#f97316', weight: 3, opacity: 0.6,
+                        dashArray: '8, 10', lineJoin: 'round', lineCap: 'round'
+                    }).addTo(map);
+                }
+            }
         });
 
+        // Cleanup old groups
         Object.keys(busMarkers).forEach(groupId => {
             if (!activeGroupIds[groupId]) {
                 map.removeLayer(busMarkers[groupId]);
@@ -346,6 +440,12 @@ function listenForAllBuses() {
                     map.removeControl(routingControls[groupId]);
                     delete routingControls[groupId];
                 }
+                if (busPolylines[groupId]) {
+                    map.removeLayer(busPolylines[groupId]);
+                    delete busPolylines[groupId];
+                    delete busPathHistory[groupId];
+                }
+                delete routeCoordinates[groupId];
             }
         });
     });
@@ -373,7 +473,12 @@ function updateEtaAndRoute(busPosition, groupId, destinationName) {
         }).addTo(map);
 
         routingControls[groupId].on('routesfound', function(e) {
-            const summary = e.routes[0].summary;
+            const route = e.routes[0];
+            
+            // 🛣️ Save coordinates array for snapping
+            routeCoordinates[groupId] = route.coordinates;
+
+            const summary = route.summary;
             const timeInMinutes = Math.round(summary.totalTime / 60);
             const marker = busMarkers[groupId];
             if (marker) {
@@ -398,7 +503,7 @@ function loadAdminMessages() {
                 const msgDate = new Date(msg.timestamp).toLocaleString();
                 const msgElement = document.createElement('div');
                 msgElement.className = 'message-item';
-                // 🔒 XSS Fix: textContent ব্যবহার করা হয়েছে, innerHTML নয়
+                
                 const p = document.createElement('p');
                 p.textContent = msg.message;
                 const small = document.createElement('small');
@@ -413,6 +518,7 @@ function loadAdminMessages() {
     });
 }
 
+// Event Listeners
 startBtn.addEventListener('click', startSharing);
 stopBtn.addEventListener('click', () => stopSharing(true));
 recenterBtn.addEventListener('click', () => {
@@ -485,8 +591,7 @@ if (mySessionId) {
             fromSelect.value = routeInfo.from;
             handleFromChange(); 
             toSelect.value = routeInfo.to;
-            // 🔒 Privacy Fix: auto-resume করার আগে user-কে confirm করতে বলা হচ্ছে
-            const resume = confirm(`আপনার আগের session চলছিল (${routeInfo.from} → ${routeInfo.to})। লোকেশন শেয়ারিং আবার শুরু করবেন?`);
+            const resume = confirm(`Your previous session was running (${routeInfo.from} → ${routeInfo.to}). Resume location sharing?`);
             if (resume) {
                 startSharing();
             } else {

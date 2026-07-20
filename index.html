@@ -4,24 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIU Shuttle Tracker</title>
-    
-    <!-- Leaflet & Routing CSS -->
+
+    <!-- Leaflet Map CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-    
+
+    <!-- Leaflet Routing Machine CSS (ETA and Routes) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
     <!-- Custom Style Sheet -->
     <link rel="stylesheet" href="style.css" />
-    
-    <!-- Leaflet & Routing JS -->
+
+    <!-- Leaflet Map & Routing JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 </head>
 <body>
-    
+
     <div id="map"></div>
     <div id="notification" class="notification"></div>
     <div class="logo">UIU Shuttle Tracker</div>
 
+    <!-- Main Controls -->
     <div class="controls">
         <label for="fromSelect">From:</label>
         <select id="fromSelect"></select>
@@ -31,19 +37,28 @@
         <button id="stopBtn" class="btn hidden">Stop</button>
     </div>
 
+    <!-- Driver Status Panel (Shown only when location sharing is Active) -->
+    <div id="driverMsgPanel" class="driver-msg-panel hidden">
+        <span>Quick Status:</span>
+        <button class="msg-btn" onclick="setDriverMsg('Jam on Route 🚗')">Jam 🚗</button>
+        <button class="msg-btn" onclick="setDriverMsg('Bus Full 👥')">Bus Full 👥</button>
+        <button class="msg-btn" onclick="setDriverMsg('At Stand 🚌')">At Stand 🚌</button>
+        <button class="msg-btn" onclick="setDriverMsg('')">Clear ✖️</button>
+    </div>
+
     <!-- Floating Action Buttons -->
     <div id="profileBtn" class="circle-btn">
-        <img src="https://i.postimg.cc/k47jC52z/shuttle-bus-icon-isolated-on-white-background-vector.jpg" alt="Profile">
+        <img src="./shuttle.jpg" alt="Profile">
     </div>
-    <div id="recenterBtn" class="circle-btn hidden">📍</div>
-    <div id="scheduleBtn" class="circle-btn">📅</div>
+    <div id="recenterBtn" class="circle-btn"><i class="fa-solid fa-location-dot"></i></div>
+    <div id="scheduleBtn" class="circle-btn"><i class="fa-solid fa-calendar-days"></i></div>
     <div id="darkModeBtn" class="circle-btn">🌙</div>
 
     <!-- Info/Contact & Feedback Modal -->
     <div id="infoModal" class="modal-overlay hidden">
         <div class="modal-content">
             <span id="closeModal" class="close-btn">&times;</span>
-            <img src="https://i.postimg.cc/0QvN9Gtt/df4c385e-1b7b-48d9-bb1d-6b4c07234acb.jpg" alt="Profile" class="modal-profile-pic">
+            <img src="./profile.jpg" alt="Profile" class="modal-profile-pic">
             <h2 class="modal-title">Md.Abdullah All Siyam</h2>
             <div class="social-links">
                 <a href="https://www.facebook.com/Siam358" target="_blank">Facebook</a> |
@@ -85,21 +100,24 @@
     <div id="scheduleModal" class="modal-overlay hidden">
         <div class="modal-content" style="max-width: 450px;">
             <span id="closeScheduleModal" class="close-btn">&times;</span>
-            <h2 class="modal-title">🚌 UIU Shuttle Schedule</h2>
+            <h2 class="modal-title">UIU Shuttle Schedule</h2>
             <table class="schedule-table">
                 <thead>
                     <tr>
-                        <th>Time</th>
-                        <th>From</th>
-                        <th>To</th>
+                        <th>From Notun Bazar</th>
+                        <th>From UIU</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td><b>07:15 AM</b></td><td>Dhanmondi / Mirpur / Uttara</td><td>UIU Campus</td></tr>
-                    <tr><td><b>08:30 AM</b></td><td>Khilgaon / Sayedabad</td><td>UIU Campus</td></tr>
-                    <tr><td><b>01:00 PM</b></td><td>UIU Campus</td><td>Dhanmondi / Mirpur</td></tr>
-                    <tr><td><b>02:15 PM</b></td><td>UIU Campus</td><td>All Routes</td></tr>
-                    <tr><td><b>04:40 PM</b></td><td>UIU Campus</td><td>All Routes</td></tr>
+                    <tr><td>07.30 AM - 08.45 AM</td><td>10.05 AM</td></tr>
+                    <tr><td>09.25 AM - 09.35 AM</td><td>11.25 AM</td></tr>
+                    <tr><td>10.45 AM - 10.55 AM</td><td>12.45 PM</td></tr>
+                    <tr><td>12.05 PM - 12.15 PM</td><td>02.05 PM</td></tr>
+                    <tr><td>01.25 PM - 01.35 PM</td><td>03.25 PM</td></tr>
+                    <tr><td>02.45 PM - 02.55 PM</td><td>04.40 PM</td></tr>
+                    <tr><td>06.10 PM</td><td>05.45 PM</td></tr>
+                    <tr><td>-</td><td>07.00 PM</td></tr>
+                    <tr><td>-</td><td>09.40 PM</td></tr>
                 </tbody>
             </table>
         </div>
