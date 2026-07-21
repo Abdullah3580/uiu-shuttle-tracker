@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UIU Shuttle Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./style.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css" integrity="sha512-ApSLB1Pd3/bZN8fWB/RG9YhN/7bd9Hkf3AGaE2mPfebjrxagjuBtx2GcgdqIlJkUzwylBo61r9Xa9NmgBI0swA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
@@ -18,41 +18,39 @@
 
 <!-- welcome message -->
 <!-- ১. প্রাথমিক প্রম্পট কার্ড (ওয়েবসাইটে আসলে শুধু এটি দেখাবে) -->
-<div id="sharePrompt" class="controls">
+<div id="sharePrompt" class="controls" style="bottom: 75px;">
     <span style="font-size: 14px; font-weight: bold;">আপনি কি লোকেশন শেয়ার করতে চান?</span>
     <button id="promptYesBtn" class="btn" style="background-color: #28a745;">হ্যাঁ</button>
     <button id="promptNoBtn" class="btn" style="background-color: #6c757d;">না</button>
 </div>
 
 <!-- location sharearing panel -->
-    <div id="mainControls" class="controls hidden">
-        <label for="fromSelect">From:</label>
-        <select id="fromSelect"></select>
-        <label for="toSelect">To:</label>
-        <select id="toSelect"></select>
-        <button id="startBtn" class="btn">Share</button>
-        <button id="stopBtn" class="btn hidden">Stop</button>
-    </div>
+    
+
+         <div id="mainControls" class="controls hidden">
+            <label for="fromSelect">From:</label>
+            <select id="fromSelect"></select>
+            <label for="toSelect">To:</label>
+            <select id="toSelect"></select>
+            <button id="startBtn" class="btn">Share</button>
+            <button id="stopBtn" class="btn hidden">Stop</button>
+        </div>
 
     <!-- ✅ Feature 2: Driver Live Message Panel -->
-    <div id="driverMsgPanel" class="driver-msg-panel hidden">
-        <span class="msg-label">📢 Status:</span>
-        <button class="msg-btn" onclick="setDriverMsg('🚦 Traffic Jam')">🚦 Traffic</button>
-        <button class="msg-btn" onclick="setDriverMsg('⚡ Moving Fast')">⚡ Fast</button>
-        <button class="msg-btn" onclick="setDriverMsg('🛑 Breakdown')">🛑 Breakdown</button>
-        <button class="msg-btn msg-btn-clear" onclick="setDriverMsg(null)">✕ Clear</button>
-    </div>
+     <div id="driverMsgPanel" class="driver-msg-panel hidden">
+            <span class="msg-label">📢 Status:</span>
+            <button class="msg-btn" onclick="setDriverMsg('🚦 Traffic Jam')">🚦 Traffic</button>
+            <button class="msg-btn" onclick="setDriverMsg('⚡ Moving Fast')">⚡ Fast</button>
+            <button class="msg-btn" onclick="setDriverMsg('🛑 Breakdown')">🛑 Breakdown</button>
+            <button class="msg-btn msg-btn-clear" onclick="setDriverMsg(null)">✕ Clear</button>
+        </div> 
 
     <!-- Floating Action Buttons -->
-    <div id="profileBtn" class="circle-btn">
-        <img src="./shuttle.jpg" alt="Profile">
-    </div>
-    <div id="recenterBtn" class="circle-btn"><i class="fa-solid fa-location-dot"></i></div>
-    <div id="scheduleBtn" class="circle-btn"><i class="fa-solid fa-calendar-days"></i></div>
-    <div id="darkModeBtn" class="circle-btn">🌙</div>
+     
+    <div id="menuBtn" class="circle-btn"><i class="fa-solid fa-bars"></i></div>
+    <div id="recenterBtn" class="circle-btn hidden"><i class="fa-solid fa-location-dot"></i></div>
 
-    <!-- Info/Contact & Feedback Modal -->
-    <div id="infoModal" class="modal-overlay hidden">
+    <div id="userProfileModal" class="modal-overlay hidden">
         <div class="modal-content">
             <span id="closeModal" class="close-btn">&times;</span>
             <img src="./profile.jpg" alt="Profile" class="modal-profile-pic">
@@ -81,7 +79,15 @@
                     <button id="logoutBtn" class="btn">Logout</button>
                 </div>
             </div>
+            
         </div>
+    </div>
+    <!-- Info/Contact & Feedback Modal -->
+    <div id="menuModal" class="menu-dropdown hidden">
+                <div id="subMenuBtn" class="circle-btn" style="right: 0px;"><i class="fa-solid fa-bars"></i></div>
+                <div id="userProfileBtn" class="circle-btn"><i class="fa-solid fa-circle-user"></i></div>
+                <div id="scheduleBtn" class="circle-btn"><i class="fa-solid fa-calendar-days"></i></div>
+                <div id="darkModeBtn" class="circle-btn">🌙</div>
     </div>
 
     <!-- Admin Message View Modal -->

@@ -6,10 +6,13 @@ html, body {
 #map { height: 100%; width: 100%; z-index: 1; }
 
 .controls {
-    position: absolute; bottom: 75px; left: 50%; transform: translateX(-50%); z-index: 1000;
-    background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    position: absolute; left: 50%; transform: translateX(-50%); z-index: 1000;
+    /* background: ; */
+     padding: 10px; border-radius: 8px; box-shadow:  0px 0px 10px 10px rgba(0, 0, 0, 0.2);
     display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center;
     transition: background 0.3s;
+     backdrop-filter: blur(2px);
+     bottom: 75px;
 }
 .logo {
     position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000;
@@ -17,6 +20,8 @@ html, body {
     font-weight: bold; font-size: 18px; backdrop-filter: blur(2px);
     transition: background 0.3s, color 0.3s;
 }
+
+
 .btn { padding: 8px 12px; font-size: 14px; border: none; border-radius: 5px; cursor: pointer; color: white; }
 #startBtn { background-color: #28a745; }
 #stopBtn  { background-color: #dc3545; }
@@ -46,17 +51,19 @@ html, body {
 /* Floating Buttons */
 .circle-btn {
     position: absolute; right: 10px; z-index: 1001;
-    background: white; width: 45px; height: 45px; border-radius: 50%;
+    width: 45px; height: 45px; border-radius: 50%;
     cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     font-size: 22px; text-align: center; line-height: 45px;
     transition: background 0.3s, color 0.3s;
     overflow: hidden; display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(2px);
 }
-.circle-btn img { width: 100%; height: 100%; object-fit: cover; }
-#profileBtn  { top: 10px; }
-#recenterBtn { top: 65px; }
+
+/* #menuBtn  { top: 10px; }
+#userProfileBtn { top: 65px; }
+#recenterBtn { bottom: 140px; }
 #scheduleBtn { top: 120px; }
-#darkModeBtn { top: 175px; }
+#darkModeBtn { top: 175px; } */
 
 .emoji-icon { font-size: 28px; text-shadow: 0 0 3px white; z-index: 9999 !important; }
 
@@ -133,3 +140,93 @@ body.dark-mode .msg-label { color: #aaa; }
 .notification.show    { top: 20px; }
 .notification.success { background-color: #28a745; }
 .notification.error   { background-color: #dc3545; }
+
+.leaflet-top.leaflet-left {
+    /* top: 10px; আপনার লোগো বা হেডার থেকে একটু নিচে নামানোর জন্য */
+}
+
+
+#recenterBtn { 
+    bottom: 124px;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    margin-right: 5px;
+    border-radius: 8px 8px 0 0px;
+    box-shadow:0 -1px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/*১. জুম কন্ট্রোল কন্টেইনার (গুগল ম্যাপস বক্স) */
+.leaflet-bottom.leaflet-right .leaflet-control-zoom {
+    border: none !important;
+    box-shadow:  0px 0px 10px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 0px 0px 8px 8px !important;
+    overflow: hidden;
+    margin-bottom: 25px !important;
+    margin-right: 15px !important;
+}
+
+/* ২. প্লাস (+), মাইনাস (-) বাটন ডিজাইন */
+.leaflet-control-zoom a {
+    /* background-color: #ffffff !important; */
+    /* color: #5f6368 !important; */
+    width: 40px !important;
+    height: 40px !important;
+    line-height: 40px !important;
+    font-size: 20px !important;
+    font-weight: normal !important;
+    border-radius: 0 !important;
+    /* border-bottom: 1px solid #e6e6e6 !important; */
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* শেষ বাটনের নিচের দাগ তুলে ফেলা */
+.leaflet-control-zoom a:last-child {
+    border-bottom: none !important;
+}
+
+/* ৩. মাউস আনলে (Hover Effect) */
+.leaflet-control-zoom a:hover {
+    /* background-color: #f8f9fa !important; */
+    color: #202124 !important;
+}
+
+/* ==========================================
+   Dark Mode Support (আপনার নাইট মোডের সাথে মিল রাখতে)
+   ========================================== */
+body.dark-mode .leaflet-control-zoom a {
+    /* background-color: #303134 !important; */
+    /* color: #bdc1c6 !important; */
+    border-bottom: 1px solid #3c4043 !important;
+}
+
+body.dark-mode .leaflet-control-zoom a:hover {
+    /* background-color: #3c4043 !important;
+    color: #ffffff !important; */
+}
+#menuBtn {
+    top: 18px;
+    right: 18px;
+    box-shadow:  0px 0px 10px 10px rgba(0, 0, 0, 0.2);
+}
+.menu-dropdown {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    /* background: white; */
+    border-radius: 10px;
+    padding: 8px;
+    box-shadow:  0px 0px 10px 10px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+.menu-dropdown .circle-btn {
+    position: static;
+}
+body.dark-mode .menu-dropdown {
+    background: #1e1e1e;
+}
