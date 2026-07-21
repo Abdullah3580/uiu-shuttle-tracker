@@ -196,57 +196,54 @@ function snapToRoute(lat, lng, groupId) {
 }
 
 // --- OSRM থেকে পয়েন্টগুলোকে আসল রাস্তার লাইনে রূপান্তর ---
-async function getOSRMRouteFromWaypoints(waypoints) {
-  if (!waypoints || waypoints.length < 2) return waypoints;
+// async function getOSRMRouteFromWaypoints(waypoints) {
+//   if (!waypoints || waypoints.length < 2) return waypoints;
 
-  const waypointsStr = waypoints.map((pt) => `${pt[1]},${pt[0]}`).join(";");
-  const url = `https://router.project-osrm.org/route/v1/driving/${waypointsStr}?overview=full&geometries=geojson`;
+//   const waypointsStr = waypoints.map((pt) => `${pt[1]},${pt[0]}`).join(";");
+//   const url = `https://router.project-osrm.org/route/v1/driving/${waypointsStr}?overview=full&geometries=geojson`;
 
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.routes && data.routes.length > 0) {
-      return data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
-    }
-  } catch (err) {
-    console.error("OSRM Route Error:", err);
-  }
-  return waypoints;
-}
+//   try {
+//     const response = await fetch(url);
+//     const data = await response.json();
+//     if (data.routes && data.routes.length > 0) {
+//       return data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+//     }
+//   } catch (err) {
+//     console.error("OSRM Route Error:", err);
+//   }
+//   return waypoints;
+// }
 
 // --- User Active Route Line ---
 let myRoutePolyline = null;
 let currentFullRouteCoords = [];
 
 async function drawRoadRoute(fromName, toName) {
-  clearUserRoute();
+    clearUserRoute();
 
-  const routeKey = `${fromName}__${toName}`;
-  let coordsToDraw = [];
+    const routeKey = `${fromName}__${toName}`;
+    let coordsToDraw = [];
 
-  if (routePaths[routeKey] && routePaths[routeKey].length > 0) {
-    coordsToDraw = await getOSRMRouteFromWaypoints(routePaths[routeKey]);
-  } else {
-    const start = locations[fromName];
-    const end = locations[toName];
-    if (!start || !end) return;
-    coordsToDraw = await getOSRMRouteFromWaypoints([
-      [start.lat, start.lng],
-      [end.lat, end.lng],
-    ]);
-  }
+    if (routePaths[routeKey] && routePaths[routeKey].length > 0) {
+        coordsToDraw = routePaths[routeKey]; // 👈 সরাসরি আপনার হার্ডকোডেড রুট ব্যবহার হবে
+    } else {
+        const start = locations[fromName];
+        const end = locations[toName];
+        if (!start || !end) return;
+        coordsToDraw = [[start.lat, start.lng], [end.lat, end.lng]];
+    }
 
-    currentFullRouteCoords = coordsToDraw;
+    currentFullRouteCoords = coordsToDraw; // বাকি রুট ছোট করার জন্য সেভ থাকছে
 
-  if (coordsToDraw.length > 0) {
-    myRoutePolyline = L.polyline(coordsToDraw, {
-      color: "#007bff",
-      weight: 6,
-      opacity: 0.8,
-      lineJoin: "round",
-      lineCap: "round",
-    }).addTo(map);
-  }
+    if (coordsToDraw.length > 0) {
+        myRoutePolyline = L.polyline(coordsToDraw, {
+            color: '#007bff',
+            weight: 6,
+            opacity: 0.8,
+            lineJoin: 'round',
+            lineCap: 'round'
+        }).addTo(map);
+    }
 }
 
 function clearUserRoute() {
@@ -760,21 +757,18 @@ function listenForAllBuses() {
   });
 }
 
-// --- OSRM দিয়ে ম্যাপে রুট ড্র করা ---
 async function updateEtaAndRoute(groupId) {
-  if (routePolylines[groupId]) return;
-  const path = routePaths[groupId];
-  if (!path) return;
+    if (routePolylines[groupId]) return;
+    const path = routePaths[groupId];
+    if (!path) return;
 
-  const realRoadCoords = await getOSRMRouteFromWaypoints(path);
-
-  routePolylines[groupId] = L.polyline(realRoadCoords, {
-    color: "#007bff",
-    weight: 5,
-    opacity: 0.75,
-    lineJoin: "round",
-    lineCap: "round",
-  }).addTo(map);
+    routePolylines[groupId] = L.polyline(path, { // 👈 সরাসরি হার্ডকোডেড path
+        color: '#007bff',
+        weight: 5,
+        opacity: 0.75,
+        lineJoin: 'round',
+        lineCap: 'round'
+    }).addTo(map);
 }
 
 function loadAdminMessages() {
